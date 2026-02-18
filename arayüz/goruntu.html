@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+
+  <style>
+    body, html {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: radial-gradient(circle, #ffffff 0%, #888888 50%, #000000 100%);
+    }
+
+    .logo-overlay {
+      position: fixed;
+      top: 20%;
+      left: 0;
+      width: 900px;
+      height: auto;
+      object-fit: cover;
+      opacity: 0.05; /* Saydamlık */
+      z-index: 999;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Saydam logo -->
+  <img src="images/logo.png" class="logo-overlay" alt="arka plan logo">
+
+
+</body>
+</html>

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <title>Bar Seçimi - GymIoT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" />
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+      font-family: sans-serif;
+      background: radial-gradient(circle, #ffffff 0%, #888888 50%, #000000 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 40px auto;
+      text-align: center;
+      padding: 0 20px;
+    }
+
+    .subtitle {
+      font-size: 25px;
+      font-weight: bolder;
+      color: #000000;
+      margin-bottom: 40px;
+    }
+
+    .bar-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr); /* 3 sütun */
+      gap: 20px;
+    }
+
+    .grid-item {
+      height: 227px;
+      background-color: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+
+    }
+
+    .grid-item img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      transition: transform 0.3s ease;
+      cursor: pointer;
+    }
+
+    .grid-item img:hover {
+      transform: scale(1.05);
+    }
+    .selected{
+      border: 7px solid #D50000	;
+  
+    }
+
+    .grid-item i {
+      font-size: 40px;
+      color: #000;
+    }
+
+    button {
+      background-color: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+    }
+
+    .logo-overlay {
+    position: fixed;
+    top: 25%;
+    left: 0;
+    width: 900px;
+    height: auto;
+    opacity: 0.07; /* Saydamlık ayarı */
+    z-index: -1;
+    pointer-events: none; /* Tıklamaları engeller */
+}
+
+
+
+  </style>
+</head>
+<body>
+  <img src="images/logo.png" class="logo-overlay" alt="arka plan logo">
+
+
+  <div class="container">
+    <p class="subtitle">Lütfen kullanmak istediğiniz bar tipini seçiniz:</p>
+   
+    <div class="bar-grid">
+      <!-- Bar 1 -->
+      <div id="uzunbar" class="grid-item" style="height: 130px; padding-top: 0; padding-bottom: 30px;">
+        <button>
+          <img style="transform: scale(1.3); padding-top: 25px;" src="images/uzun-bar.png" alt="Bar Tipi 1">
+        </button>
+      </div>
+
+      <!-- Bar 2 -->
+      <div class="grid-item" >
+        <button>
+          <img id="vbar" src="images/v-bar.png" alt="Bar Tipi 2">
+        </button>
+      </div>
+
+      <!-- Bar 3 -->
+      <div class="grid-item">
+        <button>
+          <img id="handlebar" style="padding-top: 29px;" src="images/handle.png" alt="Bar Tipi 3">
+        </button>
+      </div>
+
+      <!-- Ok -->
+      <div class="grid-item" style="color:#888888; background-color: transparent; height: 0px; width: 0px; margin-top: 280px; ">
+        <!-- <i style="height: 100%;" class="fa-solid fa-arrow-down"></i> -->
+      </div>
+
+      <!-- Video veya gif -->
+      <div class="grid-item">
+        <img src="images/v-bar-vid.gif" alt="Lat Pull Down 1">
+      </div>
+
+      <!-- Görseller -->
+      <div class="grid-item">
+        <img src="images/handle-vid.gif" alt="Lat Pull Down 2">
+      </div>
+
+      <div class="grid-item" style="margin-top: -405px;">
+        <img style="height: 100%;" id="uzunbarvid1" src="images/uzunbar-vid.gif" alt="Lat Pull Down 3">
+      </div>
+
+      <div class="grid-item" style="grid-column: 1; margin-top: -155px;">
+        <img src="images/uzun-bar-vid2.gif" id="uzunbarvid2" alt="Lat Pull Down 4">
+      </div>
+
+      <div class="grid-item" style="grid-column: 1;">
+        <img src="images/uzun-bar-vid3.gif" id="uzunbarvid3" alt="Lat Pull Down 5">
+      </div>
+
+      
+    </div>
+  </div>
+  
+  <script>
+    document.getElementById("uzunbar").addEventListener("click", function () {
+    this.classList.add("selected");
+    alert("Lütfen barın altındaki hareketlerden birini seçiniz.");
+    });
+
+    document.getElementById("uzunbarvid1").addEventListener("click", function () {
+    window.location.href = "goruntu.html";
+    });
+
+    document.getElementById("uzunbarvid2").addEventListener("click", function () {
+    window.location.href = "goruntu.html";
+    });
+
+    document.getElementById("uzunbarvid3").addEventListener("click", function () {
+    window.location.href = "goruntu.html";
+    });
+
+    document.getElementById("vbar").addEventListener("click", function () {
+    window.location.href = "goruntu.html";
+    });
+
+    document.getElementById("handlebar").addEventListener("click", function () {
+    window.location.href = "goruntu.html";
+    });
+
+
+  </script>
+</body>
+</html>

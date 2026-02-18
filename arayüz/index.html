@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>GymIoT Workout Assistant</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Start Screen -->
+  <div id="start-screen" class="screen visible">
+    <div class="logo-container">
+      <img src="images/logo.png" alt="GymIoT Logo" class="logo" />
+    </div>
+    <button id="start-btn" class="start-btn">start</button>
+  </div>
+
+  <!-- Bar Selection Screen -->
+  <div id="bar-selection-screen" class="screen">
+    <button class="back-btn" data-target="start-screen">←</button>
+    <h2>Kullanmak istediğiniz barı ve ona göre hareketi seçiniz.</h2>
+    
+    <div class="bar-options">
+      <!-- <button class="bar-option" data-bar="v-bar">V-Bar</button>
+      <button class="bar-option" data-bar="d-handle">D-Handle</button> 
+      -->
+    </div>
+  
+
+  <!-- Exercise Selection Screen -->
+  <div id="exercise-selection-screen" class="screen">
+    <button class="back-btn" data-target="bar-selection-screen">←</button>
+    <h2>Egzersiz Seç</h2>
+    <div class="exercise-options"></div>
+  </div>
+
+  <!-- Workout Screen -->
+  <div id="workout-screen" class="screen">
+    <button class="back-btn" data-target="exercise-selection-screen">←</button>
+    <h2 id="workout-title">Antrenman</h2>
+    <video id="workout-video" controls autoplay muted width="320"></video>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
