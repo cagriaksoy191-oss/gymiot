@@ -1,11 +1,10 @@
-import os, json, math, argparse, statistics
+import json, math, argparse
 from pathlib import Path
 
 import cv2
 import numpy as np
 import mediapipe as mp
 import torch
-from PIL import Image, ImageDraw, ImageFont
 
 
 
@@ -144,9 +143,6 @@ def feedback_text(metrics_item, ranges):
 
     return msgs
 
-FONT_PATH = r"C:\Windows\Fonts\arial.ttf"   # veya segoeui.ttf, DejaVuSans.ttf
-FONT_INFO = ImageFont.truetype(FONT_PATH, 22)
-FONT_WARN = ImageFont.truetype(FONT_PATH, 24)
 
 
 # ============ Çekirdek işlev: bir videodan metrik çıkar ============
