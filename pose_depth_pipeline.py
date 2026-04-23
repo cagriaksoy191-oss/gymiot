@@ -172,6 +172,10 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
     frame_by_frame_errors = []
     last_errors_set = set()
 
+    relative_dir_name = f"{Path(ARGS.out).stem}_error_frames"
+    error_image_dir = Path(ARGS.out).parent / relative_dir_name
+    error_dir_created = False
+
     while True:
         ok, frame = cap.read()
         if not ok: break
@@ -356,9 +360,10 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
                         if current_errors_set: # <--- YENİ KONTROL
                             timestamp = (frame_idx - 1) / FPS
                             
-                            relative_dir_name = f"{Path(ARGS.out).stem}_error_frames"
-                            error_image_dir = Path(ARGS.out).parent / relative_dir_name
-                            error_image_dir.mkdir(parents=True, exist_ok=True)
+                            if not error_dir_created:
+                                error_image_dir.mkdir(parents=True, exist_ok=True)
+                                error_dir_created = True
+
                             image_name = f"frame_{frame_idx-1:05d}_{int(timestamp*100):05d}ms.png"
                             relative_image_path = f"{relative_dir_name}/{image_name}".replace("\\", "/")
                             absolute_image_path = error_image_dir / image_name
