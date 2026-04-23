@@ -46,8 +46,8 @@ def apply_offset(idx, u, v):
 # ============ MiDaS (depth) ============
 print("[MiDaS] yükleniyor...")
 device = "cuda" if torch.cuda.is_available() else "cpu"
-midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small").to(device).eval()
-transforms = torch.hub.load("intel-isl/MiDaS", "transforms").small_transform
+midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=False).to(device).eval()
+transforms = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=False).small_transform
 print("[MiDaS] hazır:", device)
 
 # ============ MediaPipe Pose ============
