@@ -9,6 +9,17 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 
+# ============ Globals (Initialized in main or functions) ============
+ARGS = None
+CALIB = {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [0, 0]}
+device = None
+midas = None
+transforms = None
+mp_pose = None
+pose = None
+drawer = None
+style = None
+
 # ================= CLI =================
 def parse_args():
     p = argparse.ArgumentParser("Pose + Depth pipeline (ref/eval)")
@@ -23,17 +34,6 @@ def parse_args():
     p.add_argument("--show", action="store_true", help="Pencere göster")
     return p.parse_args()
 
-ARGS = parse_args()
-
-# ============ Kalibrasyon ofsetleri (opsiyonel) ============
-CALIB = {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [0, 0]}
-if ARGS.calib and Path(ARGS.calib).exists():
-    with open(ARGS.calib, "r", encoding="utf-8") as f:
-        CALIB.update(json.load(f))
-    print("[CALIB] yüklendi:", CALIB)
-else:
-    print("[CALIB] kullanılmıyor (0,0).")
-
 def apply_offset(idx, u, v):
     # MediaPipe indexleri:
     # 11: L-shoulder, 12: R-shoulder, 13: L-elbow, 14: R-elbow
@@ -43,19 +43,21 @@ def apply_offset(idx, u, v):
         dx, dy = CALIB["elbow_offset_xy"];    return u+dx, v+dy
     return u, v
 
-# ============ MiDaS (depth) ============
-print("[MiDaS] yükleniyor...")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small").to(device).eval()
-transforms = torch.hub.load("intel-isl/MiDaS", "transforms").small_transform
-print("[MiDaS] hazır:", device)
+def init_models():
+    global device, midas, transforms, mp_pose, pose, drawer, style
+    # ============ MiDaS (depth) ============
+    print("[MiDaS] yükleniyor...")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small").to(device).eval()
+    transforms = torch.hub.load("intel-isl/MiDaS", "transforms").small_transform
+    print("[MiDaS] hazır:", device)
 
-# ============ MediaPipe Pose ============
-mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(model_complexity=1, enable_segmentation=False,
-                    min_detection_confidence=0.5, min_tracking_confidence=0.5)
-drawer = mp.solutions.drawing_utils
-style  = mp.solutions.drawing_styles
+    # ============ MediaPipe Pose ============
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose(model_complexity=1, enable_segmentation=False,
+                        min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    drawer = mp.solutions.drawing_utils
+    style  = mp.solutions.drawing_styles
 
 # ============ Yardımcılar ============
 def angle_3pts(a, b, c):
@@ -79,7 +81,7 @@ def open_video(path):
     return cap, writer, w, h, fps
 
 def percentile_range(vals, lo=10, hi=90):
-    if not vals: return [None, None]
+    if not vals: return (None, None)
     arr = np.array(vals, dtype=float)
     return float(np.percentile(arr, lo)), float(np.percentile(arr, hi))
 
@@ -468,6 +470,18 @@ def evaluate():
 
 # ============ ÇALIŞTIR ============
 if __name__ == "__main__":
+    ARGS = parse_args()
+
+    # ============ Kalibrasyon ofsetleri (opsiyonel) ============
+    if ARGS.calib and Path(ARGS.calib).exists():
+        with open(ARGS.calib, "r", encoding="utf-8") as f:
+            CALIB.update(json.load(f))
+        print("[CALIB] yüklendi:", CALIB)
+    else:
+        print("[CALIB] kullanılmıyor (0,0).")
+
+    init_models()
+
     if ARGS.mode == "ref":
         build_reference()
     else:
