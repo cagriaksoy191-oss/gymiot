@@ -1,12 +1,24 @@
-import json, math, argparse
+import os, json, math, argparse, statistics
 from pathlib import Path
 
 import cv2
 import numpy as np
 import mediapipe as mp
 import torch
+from PIL import Image, ImageDraw, ImageFont
 
 
+
+# ============ Globals (Initialized in main or functions) ============
+ARGS = None
+CALIB = {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [0, 0]}
+device = None
+midas = None
+transforms = None
+mp_pose = None
+pose = None
+drawer = None
+style = None
 
 # ================= CLI =================
 def parse_args():
@@ -22,17 +34,6 @@ def parse_args():
     p.add_argument("--show", action="store_true", help="Pencere göster")
     return p.parse_args()
 
-ARGS = parse_args() if __name__ == "__main__" else None
-
-# ============ Kalibrasyon ofsetleri (opsiyonel) ============
-CALIB = {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [0, 0]}
-if ARGS is not None and ARGS.calib and Path(ARGS.calib).exists():
-    with open(ARGS.calib, "r", encoding="utf-8") as f:
-        CALIB.update(json.load(f))
-    print("[CALIB] yüklendi:", CALIB)
-elif ARGS is not None:
-    print("[CALIB] kullanılmıyor (0,0).")
-
 def apply_offset(idx, u, v):
     # MediaPipe indexleri:
     # 11: L-shoulder, 12: R-shoulder, 13: L-elbow, 14: R-elbow
@@ -41,8 +42,6 @@ def apply_offset(idx, u, v):
     if idx in (13, 14):
         dx, dy = CALIB["elbow_offset_xy"];    return u+dx, v+dy
     return u, v
-
-device = midas = transforms = mp_pose = pose = drawer = style = None
 
 def init_models():
     global device, midas, transforms, mp_pose, pose, drawer, style
@@ -147,6 +146,9 @@ def feedback_text(metrics_item, ranges):
 
     return msgs
 
+FONT_PATH = r"C:\Windows\Fonts\arial.ttf"   # veya segoeui.ttf, DejaVuSans.ttf
+FONT_INFO = ImageFont.truetype(FONT_PATH, 22)
+FONT_WARN = ImageFont.truetype(FONT_PATH, 24)
 
 
 # ============ Çekirdek işlev: bir videodan metrik çıkar ============
@@ -171,10 +173,6 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
     frame_idx = 0
     frame_by_frame_errors = []
     last_errors_set = set()
-
-    relative_dir_name = f"{Path(ARGS.out).stem}_error_frames"
-    error_image_dir = Path(ARGS.out).parent / relative_dir_name
-    error_dir_created = False
 
     while True:
         ok, frame = cap.read()
@@ -360,10 +358,9 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
                         if current_errors_set: # <--- YENİ KONTROL
                             timestamp = (frame_idx - 1) / FPS
                             
-                            if not error_dir_created:
-                                error_image_dir.mkdir(parents=True, exist_ok=True)
-                                error_dir_created = True
-
+                            relative_dir_name = f"{Path(ARGS.out).stem}_error_frames"
+                            error_image_dir = Path(ARGS.out).parent / relative_dir_name
+                            error_image_dir.mkdir(parents=True, exist_ok=True)
                             image_name = f"frame_{frame_idx-1:05d}_{int(timestamp*100):05d}ms.png"
                             relative_image_path = f"{relative_dir_name}/{image_name}".replace("\\", "/")
                             absolute_image_path = error_image_dir / image_name
@@ -473,7 +470,18 @@ def evaluate():
 
 # ============ ÇALIŞTIR ============
 if __name__ == "__main__":
+    ARGS = parse_args()
+
+    # ============ Kalibrasyon ofsetleri (opsiyonel) ============
+    if ARGS.calib and Path(ARGS.calib).exists():
+        with open(ARGS.calib, "r", encoding="utf-8") as f:
+            CALIB.update(json.load(f))
+        print("[CALIB] yüklendi:", CALIB)
+    else:
+        print("[CALIB] kullanılmıyor (0,0).")
+
     init_models()
+
     if ARGS.mode == "ref":
         build_reference()
     else:
