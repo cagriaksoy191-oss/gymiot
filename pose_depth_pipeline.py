@@ -22,15 +22,15 @@ def parse_args():
     p.add_argument("--show", action="store_true", help="Pencere göster")
     return p.parse_args()
 
-ARGS = parse_args()
+ARGS = parse_args() if __name__ == "__main__" else None
 
 # ============ Kalibrasyon ofsetleri (opsiyonel) ============
 CALIB = {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [0, 0]}
-if ARGS.calib and Path(ARGS.calib).exists():
+if ARGS is not None and ARGS.calib and Path(ARGS.calib).exists():
     with open(ARGS.calib, "r", encoding="utf-8") as f:
         CALIB.update(json.load(f))
     print("[CALIB] yüklendi:", CALIB)
-else:
+elif ARGS is not None:
     print("[CALIB] kullanılmıyor (0,0).")
 
 def apply_offset(idx, u, v):
@@ -42,19 +42,23 @@ def apply_offset(idx, u, v):
         dx, dy = CALIB["elbow_offset_xy"];    return u+dx, v+dy
     return u, v
 
-# ============ MiDaS (depth) ============
-print("[MiDaS] yükleniyor...")
-device = "cuda" if torch.cuda.is_available() else "cpu"
-midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=False).to(device).eval()
-transforms = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=False).small_transform
-print("[MiDaS] hazır:", device)
+device = midas = transforms = mp_pose = pose = drawer = style = None
 
-# ============ MediaPipe Pose ============
-mp_pose = mp.solutions.pose
-pose = mp_pose.Pose(model_complexity=1, enable_segmentation=False,
-                    min_detection_confidence=0.5, min_tracking_confidence=0.5)
-drawer = mp.solutions.drawing_utils
-style  = mp.solutions.drawing_styles
+def init_models():
+    global device, midas, transforms, mp_pose, pose, drawer, style
+    # ============ MiDaS (depth) ============
+    print("[MiDaS] yükleniyor...")
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+    midas = torch.hub.load("intel-isl/MiDaS", "MiDaS_small", trust_repo=False).to(device).eval()
+    transforms = torch.hub.load("intel-isl/MiDaS", "transforms", trust_repo=False).small_transform
+    print("[MiDaS] hazır:", device)
+
+    # ============ MediaPipe Pose ============
+    mp_pose = mp.solutions.pose
+    pose = mp_pose.Pose(model_complexity=1, enable_segmentation=False,
+                        min_detection_confidence=0.5, min_tracking_confidence=0.5)
+    drawer = mp.solutions.drawing_utils
+    style  = mp.solutions.drawing_styles
 
 # ============ Yardımcılar ============
 def angle_3pts(a, b, c):
@@ -469,6 +473,7 @@ def evaluate():
 
 # ============ ÇALIŞTIR ============
 if __name__ == "__main__":
+    init_models()
     if ARGS.mode == "ref":
         build_reference()
     else:
