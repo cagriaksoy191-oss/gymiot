@@ -119,7 +119,8 @@ def open_video(path):
 def percentile_range(vals, lo=10, hi=90):
     if not vals: return (None, None)
     arr = np.array(vals, dtype=float)
-    return float(np.percentile(arr, lo)), float(np.percentile(arr, hi))
+    res = np.percentile(arr, [lo, hi])
+    return float(res[0]), float(res[1])
 
 def within(val, lo, hi):
     return (lo is None or val >= lo) and (hi is None or val <= hi)
@@ -350,9 +351,6 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
                         issues_counter["bar_drop"] += int(badBAR)
                         issues_counter["shoulder_protr"] += int(badPROT)
 
-                        # ekranda da göstermek istersen:
-                        #put(y=160, txt=f"BAR: {val:+.3f}", bad=badBAR)
-                        #put(y=190, txt=f"PROT: {item['shoulder_protr']:+.3f}", bad=badPROT)
                         right_y = 40
                         right_y = put_right(right_y, f"BAR:  {item['bar_drop']:+.3f}", bad=badBAR)
                         right_y = put_right(right_y, f"PROT: {item['shoulder_protr']:+.3f}", bad=badPROT)
