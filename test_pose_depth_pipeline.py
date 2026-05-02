@@ -17,8 +17,15 @@ class MockNumpy:
         if not arr:
             return None
         arr_sorted = sorted(arr)
-        index = (q / 100.0) * (len(arr_sorted) - 1)
-        return arr_sorted[int(index)]
+        if isinstance(q, (list, tuple)):
+            results = []
+            for qi in q:
+                index = (qi / 100.0) * (len(arr_sorted) - 1)
+                results.append(arr_sorted[int(index)])
+            return results
+        else:
+            index = (q / 100.0) * (len(arr_sorted) - 1)
+            return arr_sorted[int(index)]
 
 mock_np = MockNumpy()
 sys.modules['numpy'] = mock_np

@@ -83,7 +83,8 @@ def open_video(path):
 def percentile_range(vals, lo=10, hi=90):
     if not vals: return (None, None)
     arr = np.array(vals, dtype=float)
-    return float(np.percentile(arr, lo)), float(np.percentile(arr, hi))
+    res = np.percentile(arr, [lo, hi])
+    return float(res[0]), float(res[1])
 
 def within(val, lo, hi):
     return (lo is None or val >= lo) and (hi is None or val <= hi)
