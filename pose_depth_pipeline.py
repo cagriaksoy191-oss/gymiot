@@ -60,6 +60,42 @@ def init_models():
     style  = mp.solutions.drawing_styles
 
 # ============ Yardımcılar ============
+def is_safe_path(path, allowed_extensions=None, must_exist=True):
+    """
+    Güvenlik kontrolü: URL şemalarını engeller, dosya olup olmadığını ve uzantısını doğrular.
+    """
+    if path is None or str(path).strip() == "":
+        if must_exist:
+            raise SystemExit(f"[HATA] Geçersiz yol: {path}")
+        return True
+
+    p = Path(path)
+
+    # 1. URL Kontrolü (SSRF engelleme)
+    # cv2.VideoCapture bazı protokolleri (http, rtsp vb.) kabul eder, bunları engellemeliyiz.
+    path_str = str(path).strip().lower()
+    forbidden_schemes = ["http:", "https:", "rtsp:", "rtmp:", "ftp:", "mms:", "udp:", "tcp:"]
+    for scheme in forbidden_schemes:
+        if path_str.startswith(scheme):
+            raise SystemExit(f"[GÜVENLİK HATASI] URL kullanılamaz: {path}")
+
+    # 2. Varoluş ve Dosya Tipi Kontrolü
+    if must_exist:
+        if not p.exists():
+            raise SystemExit(f"[HATA] Dosya yok: {path}")
+        if not p.is_file():
+            raise SystemExit(f"[HATA] Geçersiz dosya tipi: {path}")
+    elif p.exists() and not p.is_file():
+        raise SystemExit(f"[HATA] Yol bir dosya değil: {path}")
+
+    # 3. Uzantı Kontrolü
+    if allowed_extensions:
+        ext = p.suffix.lower()
+        if ext not in allowed_extensions:
+            raise SystemExit(f"[HATA] Desteklenmeyen dosya uzantısı ({ext}): {path}")
+
+    return True
+
 def angle_3pts(a, b, c):
     bax, bay = a[0]-b[0], a[1]-b[1]
     bcx, bcy = c[0]-b[0], c[1]-b[1]
@@ -71,7 +107,7 @@ def angle_3pts(a, b, c):
 def to_px(lm, w, h): return int(lm.x*w), int(lm.y*h)
 
 def open_video(path):
-    if not Path(path).exists(): raise SystemExit(f"[HATA] video yok: {path}")
+    is_safe_path(path, allowed_extensions=[".mp4", ".avi", ".mov", ".mkv", ".webm"], must_exist=True)
     cap = cv2.VideoCapture(path)
     if not cap.isOpened():      raise SystemExit(f"[HATA] video açılamadı: {path}")
     w  = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))  or 1280
@@ -470,8 +506,15 @@ def evaluate():
 if __name__ == "__main__":
     ARGS = parse_args()
 
+    # Güvenlik Kontrolleri
+    is_safe_path(ARGS.src, allowed_extensions=[".mp4", ".avi", ".mov", ".mkv", ".webm"], must_exist=True)
+    is_safe_path(ARGS.refjson, allowed_extensions=[".json"], must_exist=(ARGS.mode == "eval"))
+    is_safe_path(ARGS.out, allowed_extensions=[".mp4", ".avi", ".mov", ".mkv", ".webm"], must_exist=False)
+    is_safe_path(ARGS.save_metrics, allowed_extensions=[".json"], must_exist=False)
+
     # ============ Kalibrasyon ofsetleri (opsiyonel) ============
-    if ARGS.calib and Path(ARGS.calib).exists():
+    if ARGS.calib:
+        is_safe_path(ARGS.calib, allowed_extensions=[".json"], must_exist=True)
         with open(ARGS.calib, "r", encoding="utf-8") as f:
             CALIB.update(json.load(f))
         print("[CALIB] yüklendi:", CALIB)
