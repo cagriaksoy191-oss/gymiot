@@ -314,9 +314,6 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
                         issues_counter["bar_drop"] += int(badBAR)
                         issues_counter["shoulder_protr"] += int(badPROT)
 
-                        # ekranda da göstermek istersen:
-                        #put(y=160, txt=f"BAR: {val:+.3f}", bad=badBAR)
-                        #put(y=190, txt=f"PROT: {item['shoulder_protr']:+.3f}", bad=badPROT)
                         right_y = 40
                         right_y = put_right(right_y, f"BAR:  {item['bar_drop']:+.3f}", bad=badBAR)
                         right_y = put_right(right_y, f"PROT: {item['shoulder_protr']:+.3f}", bad=badPROT)
