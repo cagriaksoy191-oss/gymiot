@@ -1,5 +1,5 @@
 import sys
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 # Mock dependencies before importing the module under test
 sys.modules['cv2'] = MagicMock()
@@ -23,7 +23,7 @@ class MockNumpy:
 mock_np = MockNumpy()
 sys.modules['numpy'] = mock_np
 
-from pose_depth_pipeline import percentile_range, within
+from pose_depth_pipeline import percentile_range, within, apply_offset
 
 def test_percentile_range_empty():
     assert percentile_range([]) == (None, None)
@@ -53,3 +53,21 @@ def test_within_none_boundaries():
     assert within(5, 1, None) is True
     assert within(0, 1, None) is False
     assert within(5, None, None) is True
+
+def test_apply_offset_shoulders():
+    with patch.dict('pose_depth_pipeline.CALIB', {"shoulder_offset_xy": [10, 20], "elbow_offset_xy": [0, 0]}):
+        # 11: L-shoulder, 12: R-shoulder
+        assert apply_offset(11, 100, 100) == (110, 120)
+        assert apply_offset(12, 50, 50) == (60, 70)
+
+def test_apply_offset_elbows():
+    with patch.dict('pose_depth_pipeline.CALIB', {"shoulder_offset_xy": [0, 0], "elbow_offset_xy": [5, -5]}):
+        # 13: L-elbow, 14: R-elbow
+        assert apply_offset(13, 100, 100) == (105, 95)
+        assert apply_offset(14, 50, 50) == (55, 45)
+
+def test_apply_offset_none():
+    with patch.dict('pose_depth_pipeline.CALIB', {"shoulder_offset_xy": [10, 20], "elbow_offset_xy": [5, 5]}):
+        # Other indices should not have offset
+        assert apply_offset(0, 100, 100) == (100, 100)
+        assert apply_offset(23, 100, 100) == (100, 100)
