@@ -27,10 +27,36 @@ class MockNumpy:
             index = (q / 100.0) * (len(arr_sorted) - 1)
             return arr_sorted[int(index)]
 
+    def isscalar(self, obj):
+        return isinstance(obj, (int, float, str, bool))
+
+    @property
+    def bool_(self):
+        return bool
+
 mock_np = MockNumpy()
 sys.modules['numpy'] = mock_np
 
-from pose_depth_pipeline import percentile_range, within, apply_offset
+import pytest
+from pose_depth_pipeline import percentile_range, within, apply_offset, angle_3pts
+
+def test_angle_3pts():
+    # 90 degrees
+    assert angle_3pts((100, 0), (0, 0), (0, 100)) == pytest.approx(90.0, abs=1e-2)
+    # 180 degrees
+    assert angle_3pts((100, 0), (0, 0), (-100, 0)) == pytest.approx(180.0, abs=1e-2)
+    # 0 degrees
+    assert angle_3pts((100, 0), (0, 0), (100, 0)) == pytest.approx(0.0, abs=1e-2)
+    # 45 degrees
+    assert angle_3pts((100, 0), (0, 0), (100, 100)) == pytest.approx(45.0, abs=1e-2)
+
+    # Edge cases: overlapping points
+    # If a == b, bax=bay=0, dot=0, den=1e-6, v=0, acos(0)=90
+    assert angle_3pts((0, 0), (0, 0), (1, 0)) == pytest.approx(90.0)
+    # If b == c, bcx=bcy=0, dot=0, den=1e-6, v=0, acos(0)=90
+    assert angle_3pts((1, 0), (0, 0), (0, 0)) == pytest.approx(90.0)
+    # If a == b == c
+    assert angle_3pts((0, 0), (0, 0), (0, 0)) == pytest.approx(90.0)
 
 def test_percentile_range_empty():
     assert percentile_range([]) == (None, None)
