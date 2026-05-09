@@ -71,6 +71,16 @@ def is_safe_path(path, allowed_extensions=None, must_exist=True):
 
     p = Path(path)
 
+    # 0. Path Traversal Kontrolü
+    try:
+        # Yolu temizle ve mutlak hale getir
+        resolved_path = p.resolve()
+        # Mevcut çalışma dizinine göre kontrol et
+        if not resolved_path.is_relative_to(Path.cwd().resolve()):
+            raise SystemExit(f"[GÜVENLİK HATASI] Dizin dışına erişim engellendi: {path}")
+    except (ValueError, RuntimeError):
+        raise SystemExit(f"[GÜVENLİK HATASI] Geçersiz veya tehlikeli yol: {path}")
+
     # 1. URL Kontrolü (SSRF engelleme)
     # cv2.VideoCapture bazı protokolleri (http, rtsp vb.) kabul eder, bunları engellemeliyiz.
     path_str = str(path).strip().lower()
