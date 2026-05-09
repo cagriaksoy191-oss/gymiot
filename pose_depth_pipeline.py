@@ -293,12 +293,16 @@ def extract_metrics(video_path, render_overlay=True, ranges=None):
                 ema_pro = ema_pro
 
             # item içine smoothed değerleri yaz
-            item["bar_drop"] = ema_bar if ema_bar is not None else bar_drop
-            item["shoulder_protr"] = ema_pro if ema_pro is not None else shoulder_protr
+            item.update({
+                "elbow_left": L_elb,
+                "elbow_right": R_elb,
+                "shoulder_left": L_shd,
+                "shoulder_right": R_shd,
+                "z": Zrel,
+                "bar_drop": ema_bar if ema_bar is not None else bar_drop,
+                "shoulder_protr": ema_pro if ema_pro is not None else shoulder_protr
+            })
             dbg = f"BARdrop={item['bar_drop']:+.3f}"
-
-            item = {"elbow_left":L_elb, "elbow_right":R_elb,
-                    "shoulder_left":L_shd, "shoulder_right":R_shd, "z":Zrel, "bar_drop": bar_drop, "shoulder_protr": shoulder_protr}
 
             if render_overlay:
                 # iskelet çiz
@@ -443,22 +447,15 @@ def build_reference():
     print(f"[REF] Orta dilim seçildi: {start}:{end} / {n} kare")
 
     # Her metrik için 15-85 yüzdelik aralığı
-    def series(key): return [m[key] for m in metrics if m[key] is not None]
-    ref = {
-        "elbow_left"    : percentile_range(series("elbow_left")),
-        "elbow_right"   : percentile_range(series("elbow_right")),
-        "shoulder_left" : percentile_range(series("shoulder_left")),
-        "shoulder_right": percentile_range(series("shoulder_right")),
-        # Zrel: animasyon/videodan bağımsızlaştırmak için normalize edelim (frame-içi z-score)
-        # Ama basit tutuyoruz: ref videodaki "raw" yüzdelik aralığı alıyoruz.
-        "z"             : percentile_range(series("z")),
-        "meta": {"lo":15, "hi":85, "note":"MiDaS relative depth; omuz ortalaması"},
-        "bar_drop": percentile_range([m["bar_drop"] for m in metrics if m.get("bar_drop") is not None]),
-        "shoulder_protr": percentile_range(
-            [m["shoulder_protr"] for m in metrics if m.get("shoulder_protr") is not None]),"shoulder_span": percentile_range([m["shoulder_span"] for m in metrics if m.get("shoulder_span") is not None]),
+    keys = ["elbow_left", "elbow_right", "shoulder_left", "shoulder_right", "z", "bar_drop", "shoulder_protr", "shoulder_span"]
+    all_series = {k: [] for k in keys}
+    for m in metrics:
+        for k in keys:
+            if (v := m.get(k)) is not None:
+                all_series[k].append(v)
 
-
-    }
+    ref = {k: percentile_range(all_series[k]) for k in keys}
+    ref["meta"] = {"lo": 15, "hi": 85, "note": "MiDaS relative depth; omuz ortalaması"}
     with open(ARGS.refjson, "w", encoding="utf-8") as f:
         json.dump(ref, f, ensure_ascii=False, indent=2)
     print("[REF] yazıldı ->", ARGS.refjson)
