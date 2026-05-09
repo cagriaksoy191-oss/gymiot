@@ -1,7 +1,6 @@
 document.addEventListener("DOMContentLoaded", function () {
 const screens = ["start-screen", "bar-selection-screen", "exercise-selection-screen", "workout-screen"];
 let selectedBar = "";
-let selectedExercise = "";
 
 const exerciseData = {
   "v-bar": [
@@ -43,7 +42,6 @@ document.querySelectorAll(".bar-option").forEach(btn => {
         btn.className = "exercise-option";
         btn.textContent = ex.name;
         btn.onclick = () => {
-          selectedExercise = ex;
           document.getElementById("workout-title").textContent = ex.name;
           document.getElementById("workout-video").src = ex.video;
           showScreen("workout-screen");
